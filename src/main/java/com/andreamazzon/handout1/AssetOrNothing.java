@@ -103,14 +103,15 @@ public class AssetOrNothing extends AbstractAssetMonteCarloProduct {
 		// Get S(T)
 		final RandomVariable underlyingAtMaturity = model.getAssetValue(maturity, underlyingIndex);
 
+		RandomVariable zeroAsRandomVariable = new Scalar(0.0);
 		/*
 		 * The payoff. Look at the application of the method choose. Note here that the
-		 * second argument must be of type RandomVariable.
+		 * second argument must be of type RandomVariable. S_T 1_{S_T-K>=0}
 		 */
-		RandomVariable values = (underlyingAtMaturity.sub(strike)).choose(underlyingAtMaturity, new Scalar(0.0));
+		RandomVariable values = (underlyingAtMaturity.sub(strike)).choose(underlyingAtMaturity, zeroAsRandomVariable);
 
 		// or:
-		// final DoubleUnaryOperator payoffFunction = (x) -> (x-strike>0?x:0);
+		// final DoubleUnaryOperator payoffFunction = (x) -> (x - strike >= 0 ? x : 0);
 		// RandomVariable values = underlyingAtMaturity.apply(payoffFunction);
 
 		// Discounting...

@@ -113,14 +113,14 @@ public class BrownianMotionExperiments {
 		 * Brownian motions. Here some methods of BrownianMotion and RandomVariable come
 		 * into play.
 		 */
-		for (int timeIndex = 1; timeIndex < timeDiscretization.getNumberOfTimeSteps(); timeIndex++) {
+		for (int timeIndex = 1; timeIndex < numberOfTimes; timeIndex++) {
 
 			/*
 			 * We fix the increments: in this way we don't have to call the method every
 			 * time we need them. Note the getBrownianIncrement method of BrownianMotion
 			 */
-			firstBrownianIncrement = myBrownianMotion.getBrownianIncrement(timeIndex, 0);
-			secondBrownianIncrement = myBrownianMotion.getBrownianIncrement(timeIndex, 1);
+			firstBrownianIncrement = myBrownianMotion.getBrownianIncrement(timeIndex - 1, 0);
+			secondBrownianIncrement = myBrownianMotion.getBrownianIncrement(timeIndex - 1, 1);
 
 			// We get W(t+dt) from dW(t)
 
@@ -169,7 +169,7 @@ public class BrownianMotionExperiments {
 		System.out.println("Mean of the first Brownian Motion at time " + time + " : "
 				+ FORMATTERREAL4.format(firstBrownianMotionPath[indexForTheGivenTime].getAverage()));
 		System.out.println("Variance of the first Brownian Motion at time " + time + " : "
-				+ FORMATTERREAL4.format(secondBrownianMotionPath[indexForTheGivenTime].getVariance()) + "\n");
+				+ FORMATTERREAL4.format(firstBrownianMotionPath[indexForTheGivenTime].getVariance()) + "\n");
 
 		// same thing for the quadratic variation..
 		System.out.println("Mean of the Quadratic Variation of the first Brownian motion at time " + time + " : "

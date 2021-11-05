@@ -47,14 +47,14 @@ public class CallWithFinmath {
 
 	public static void main(String[] args) throws CalculationException {
 
-		// process parameters
-		final double initialValue = 100.0;
-		final double volatility = 0.25; // the volatility of the underlying
-		final double riskFreeRate = 0.1;
-
 		// option parameters
 		final double strike = 100.0;
 		final double maturity = 1.0;
+
+		// model parameters
+		final double initialValue = 100.0;
+		final double volatility = 0.25; // the volatility of the underlying
+		final double riskFreeRate = 0.1;
 
 		// simulation parameter
 		final int numberOfSimulations = 100000;// the number of paths simulated

@@ -27,7 +27,8 @@ public class AssetOrNothingCheck {
 	static final DecimalFormat FORMATTERPERCENTAGE2 = new DecimalFormat("0.00%");
 
 	public static void main(String[] args) throws CalculationException {
-		// process parameters
+
+		// model parameters
 		final double initialPrice = 100.0;
 		final double volatility = 0.25; // the volatility of the underlying
 		final double riskFreeRate = 0;
@@ -37,11 +38,11 @@ public class AssetOrNothingCheck {
 		final double maturity = 1.0;
 
 		// simulation parameter
-		final int numberOfSimulations = 100000;// the number of paths simulated
+		final int numberOfSimulations = 1000000;// the number of paths simulated
 
 		// time discretization parameters
 		final double initialTime = 0;
-		final int numberOfTimeSteps = 365;
+		final int numberOfTimeSteps = 100;
 		final double timeStep = maturity / numberOfTimeSteps;
 		final TimeDiscretization times = new TimeDiscretizationFromArray(initialTime, numberOfTimeSteps, timeStep);
 
@@ -56,14 +57,15 @@ public class AssetOrNothingCheck {
 		 */
 		final AssetModelMonteCarloSimulationModel bsModel = new MonteCarloBlackScholesModel(times, numberOfSimulations,
 				initialPrice, riskFreeRate, volatility);
+
 		final AbstractAssetMonteCarloProduct assetOrNothingOption = new AssetOrNothing(maturity, strike);
 
-		final double monteCarloValue = assetOrNothingOption.getValue(bsModel) / initialPrice;
+		final double monteCarloValueOfDelta = assetOrNothingOption.getValue(bsModel) / initialPrice;
 
-		final double absolutePercentageError = Math.abs(analyticValueOfTheDelta - monteCarloValue)
+		final double absolutePercentageError = Math.abs(analyticValueOfTheDelta - monteCarloValueOfDelta)
 				/ analyticValueOfTheDelta;
 
-		System.out.println("B-S Monte Carlo value: " + FORMATTERPOSITIVE4.format(monteCarloValue) + "\n"
+		System.out.println("B-S Monte Carlo value: " + FORMATTERPOSITIVE4.format(monteCarloValueOfDelta) + "\n"
 				+ "Analytical value: " + FORMATTERPOSITIVE4.format(analyticValueOfTheDelta) + "\n"
 				+ "Absolute percentage error: " + FORMATTERPERCENTAGE2.format(absolutePercentageError) + "\n");
 	}

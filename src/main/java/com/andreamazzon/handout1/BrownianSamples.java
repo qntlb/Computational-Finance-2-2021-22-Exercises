@@ -34,13 +34,13 @@ public class BrownianSamples {
 		 * that will represent the seeds.
 		 */
 		final Random randomGenerator = new Random();
-		final int numberOfPrices = 1000;
+		final int numberOfAverage = 1000;
 
 		/*
 		 * It is supposed to contain all the averages for given seeds. It gets then
 		 * wrapped into a RandomVariable.
 		 */
-		final double[] vectorOfAverages = new double[numberOfPrices];
+		final double[] vectorOfAverages = new double[numberOfAverage];
 
 		final double finalTime = 1.0;
 
@@ -89,7 +89,7 @@ public class BrownianSamples {
 		 */
 		int seed;// it's better to create it once for all here, outside the for loop.
 
-		for (int i = 1; i < numberOfPrices; i++) {
+		for (int i = 1; i < numberOfAverage; i++) {
 			seed = randomGenerator.nextInt();// random int
 			/*
 			 * Note here the getCloneWithModifiedSeed method: we don't have to bother
