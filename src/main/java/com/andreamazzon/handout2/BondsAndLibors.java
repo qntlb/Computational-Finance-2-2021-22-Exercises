@@ -57,11 +57,11 @@ public class BondsAndLibors {
 		final double firstBond = 1.0;// P(0;0)=1, we use it to calculate L(0,T_1;0)
 		final double secondBond = bonds[0];
 		// L(0,T_1;0)=1/T_1*(P(0;0)-P(T_1;0))/P(T_1;0) (since T_0=0)
-		derivedLiborsCurve[0] = (firstBond - secondBond) / (secondBond * tenureStructure.getTimeStep(0));
+		derivedLiborsCurve[0] = (firstBond - secondBond) / (secondBond * tenureStructure.getTime(0));
 		for (int periodIndex = 1; periodIndex < curveLength; periodIndex++) {
 			// L(T_{i-1},T_i;0)=1/(T_i-T_{i-1})(P(T_{i-1};0)-P(T_i;0))/P(T_i;0)
 			derivedLiborsCurve[periodIndex] = (bonds[periodIndex - 1] - bonds[periodIndex])
-					/ (bonds[periodIndex] * tenureStructure.getTimeStep(periodIndex));
+					/ (bonds[periodIndex] * tenureStructure.getTimeStep(periodIndex - 1));
 		}
 		return derivedLiborsCurve;
 	}
@@ -84,11 +84,11 @@ public class BondsAndLibors {
 		final double[] derivedBondsCurve = new double[curveLength];// vector that will store the zero coupon bond curve
 		final double firstBond = 1.0;// P(0;0)=1, we use it to calculate P(0;T_1) from L(0,T_1;0)
 		double currentLibor = libors[0];
-		double timeStep = tenureStructure.getTimeStep(0);
+		double timeStep = tenureStructure.getTime(0);
 		// P(T_1;0) = P(0;0)/(1+L(0,T_1;0)*T_1 (since T_0 = 0)
 		derivedBondsCurve[0] = firstBond / (1 + currentLibor * timeStep);
 		for (int periodIndex = 1; periodIndex < curveLength; periodIndex++) {
-			timeStep = tenureStructure.getTimeStep(periodIndex);
+			timeStep = tenureStructure.getTimeStep(periodIndex - 1);
 			currentLibor = libors[periodIndex];// L(T_{i-1},T_i;0)
 			// P(T_i;0) = P(T_{i-1};0)/(1+L(T_{i-1},T_i;0)*(T_i-T_{i-1})
 			derivedBondsCurve[periodIndex] = derivedBondsCurve[periodIndex - 1] / (1 + currentLibor * timeStep);
