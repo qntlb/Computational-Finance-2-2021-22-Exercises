@@ -106,8 +106,8 @@ public class BondsAndLibors {
 		final double[] bonds = { 0.98, 0.975, 0.97, 0.965, 0.959, 0.954, 0.95, 0.945 };
 
 		// time discretization parameters
-		final double initialTime = 0;
-		final int numberOfTimeSteps = 8;
+		final double initialTime = 0.5;
+		final int numberOfTimeSteps = 7;
 		final double timeStep = 0.5;
 		final TimeDiscretization times = new TimeDiscretizationFromArray(initialTime, numberOfTimeSteps, timeStep);
 
