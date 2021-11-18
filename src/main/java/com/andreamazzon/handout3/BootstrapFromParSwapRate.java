@@ -76,6 +76,9 @@ public class BootstrapFromParSwapRate {
 
 		final double lastBond = computedBonds.get(computedBondsSize - 1);// P(T_{k-2};0)
 		/*
+		 * We want to find x such that the theoretical value of the par swap rate equals
+		 * the given vale of the swapRate, i.e., such that
+		 * swapRate=(P(T_1;0)-x))/(Delta*(\sum_{k=2}^{n-2}P(T_k;0)+f(P(T_{n-2}),x))+x)
 		 * We use the BisectionSearch class of the finmath library. It can be used to
 		 * find the zero of monotone functions on some interval, whose extremes are
 		 * given in the constructor of the class. Here we know that the value of the
@@ -83,11 +86,11 @@ public class BootstrapFromParSwapRate {
 		 * (as it has an higher maturity)
 		 */
 		final BisectionSearch rootFinder = new BisectionSearch(0.0001, // left point of the interval where we search
-				1// right point. How to do better?
+				lastBond// right point.
 		);
 
 		/*
-		 * look at the class in the Fianmth library: what is contained in the while is a
+		 * look at the class in the Finmath library: what is contained in the while is a
 		 * Boolean which is True when the points are close enough
 		 */
 		while (!rootFinder.isDone()) {
@@ -115,6 +118,11 @@ public class BootstrapFromParSwapRate {
 	 * interpolation of the logarithm of the discount factors.
 	 */
 	private Double interpolate(double bondT0, double bondT1) {
+		/*
+		 * The logarithmic interpolation works as follows: if t \in [T_i, T_{i+1}], f(t)
+		 * gets approximated as
+		 * exp((T_{i+1}-t)/(T_{i+1}-T_i)log(f(T_i))+(t-T_i)/(T_{i+1}-T_i)log(f(T_{i+1}))
+		 */
 		return Math.exp(0.5 * (Math.log(bondT0) + Math.log(bondT1)));
 	}
 
