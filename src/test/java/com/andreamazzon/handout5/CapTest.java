@@ -44,7 +44,7 @@ public class CapTest {
 		final double notional = 1000;
 
 		// parameters for the Monte Carlo simulation
-		final int numberOfTimeSteps = 10;
+		final int numberOfTimeSteps = 20;
 		final int numberOfSimulations = 100000;
 
 		final double correlation = 0.2;

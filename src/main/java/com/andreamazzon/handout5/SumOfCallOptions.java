@@ -101,7 +101,7 @@ public class SumOfCallOptions extends AbstractAssetMonteCarloProduct {
 		firstValues = firstValues.mult(numeraireAtEvalTime);
 
 		/*
-		 * We multiply the payoff of the second option by a constant ((T_2-T_1)P(T_3;0)
+		 * We multiply the payoff of the second option by a constant ((T_2-T_1)P(T_2;0)
 		 * for a cap)
 		 */
 		firstValues = firstValues.mult(firstMultiplier);
