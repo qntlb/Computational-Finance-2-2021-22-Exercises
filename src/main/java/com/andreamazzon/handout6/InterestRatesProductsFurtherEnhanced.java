@@ -34,8 +34,8 @@ public class InterestRatesProductsFurtherEnhanced extends InterestRatesProductsE
 	 * @param quantoRate,                 the constant conversion factor
 	 */
 	public static double calculateQuantoCapletValue(double initialForeignForwardLibor, double foreignLiborVolatility,
-			double fxVolatility, double correlationFxForeignLibor, double fixingDate, double paymentDate, double strike,
-			double paymentDateDiscountFactor, double notionalInForeignCurrency, double quantoRate) {
+			double ffxVolatility, double correlationFxForeignLibor, double fixingDate, double paymentDate,
+			double strike, double paymentDateDiscountFactor, double notionalInForeignCurrency, double quantoRate) {
 		final double periodLength = paymentDate - fixingDate;
 
 		/*
@@ -45,10 +45,16 @@ public class InterestRatesProductsFurtherEnhanced extends InterestRatesProductsE
 		 * Black-Scholes formula: see page 206 of the script.
 		 */
 		return notionalInForeignCurrency * quantoRate * paymentDateDiscountFactor * periodLength
-				* AnalyticFormulas.blackScholesOptionValue(initialForeignForwardLibor
-						* Math.exp(-correlationFxForeignLibor * foreignLiborVolatility * fxVolatility * fixingDate), 0,
-						// - correlationFxForeignLibor * foreignLiborVolatility * fxVolatility,
-						foreignLiborVolatility, fixingDate, strike);
+				* AnalyticFormulas.blackScholesOptionValue(
+						initialForeignForwardLibor * Math
+								.exp(-correlationFxForeignLibor * foreignLiborVolatility * ffxVolatility * fixingDate),
+						0, foreignLiborVolatility, fixingDate, strike);
+
+//		return Math.exp(-correlationFxForeignLibor * foreignLiborVolatility * ffxVolatility * fixingDate)
+//				* notionalInForeignCurrency * quantoRate * paymentDateDiscountFactor * periodLength
+//				* AnalyticFormulas.blackScholesOptionValue(initialForeignForwardLibor,
+//						-correlationFxForeignLibor * foreignLiborVolatility * ffxVolatility, foreignLiborVolatility,
+//						fixingDate, strike);
 	}
 
 }

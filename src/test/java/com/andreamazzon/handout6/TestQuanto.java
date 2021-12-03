@@ -30,8 +30,8 @@ public class TestQuanto {
 		final double initialForwardForeignLibor = initialForwardLibor;
 		final double liborForeignVolatility = liborVolatility;
 
-		// forward fx rate dynamics
-		final double fxVolatility = 0.2;
+		// forward ffx rate dynamics
+		final double ffxVolatility = 0.2;
 
 		// correlation between the forward fx rate process and the Libor rate process
 		final double correlationFxLibor = 0.4;
@@ -40,7 +40,7 @@ public class TestQuanto {
 		final double quantoRate = 0.9;
 
 		final double quantoPrice = InterestRatesProductsFurtherEnhanced.calculateQuantoCapletValue(
-				initialForwardForeignLibor, liborForeignVolatility, fxVolatility, correlationFxLibor, fixingDate,
+				initialForwardForeignLibor, liborForeignVolatility, ffxVolatility, correlationFxLibor, fixingDate,
 				paymentDate, strike, discountFactorAtMaturity, notional, quantoRate);
 
 		System.out.println("Price of the Quanto Caplet: " + quantoPrice);
