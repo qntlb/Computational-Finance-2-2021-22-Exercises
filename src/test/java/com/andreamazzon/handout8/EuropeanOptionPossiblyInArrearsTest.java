@@ -25,8 +25,10 @@ public class EuropeanOptionPossiblyInArrearsTest {
 
 	final DecimalFormat FORMATTERREAL4 = new DecimalFormat("0.0000");
 
-	// parameters for both the options: they give the value of the fields of the
-	// parent class
+	/*
+	 * parameters for both the options: they give the value of the fields of the
+	 * parent class
+	 */
 	final double firstTime = 1;
 	final double secondTime = 2;
 
@@ -38,7 +40,6 @@ public class EuropeanOptionPossiblyInArrearsTest {
 	final double liborVolatility = 0.3;// parameter for the log-volatility of the process
 
 	// value of L(T_1,T_2;0) from T_1, T_2, P(T_1;0), P(T_2;0).
-	final double initialForwardLibor = 1 / (secondTime - firstTime) * (firstBond / secondBond - 1);
 
 	final double tolerance = 1E-10;
 
@@ -51,6 +52,8 @@ public class EuropeanOptionPossiblyInArrearsTest {
 		// first we calculate the prices with the "new" implementation..
 		final EuropeanOptionPossiblyInArrears floater = new FloaterWithBlack(firstTime, secondTime, firstBond,
 				secondBond, liborVolatility, notional, false);
+
+		final double initialForwardLibor = floater.getInitialValueLibor();
 
 		final double priceOfTheFloater = floater.getValueInClassicUnits(initialForwardLibor);
 
@@ -95,6 +98,8 @@ public class EuropeanOptionPossiblyInArrearsTest {
 		// first we calculate the prices with the "new" implementation..
 		final EuropeanOptionPossiblyInArrears caplet = new CapletWithBlack(firstTime, secondTime, firstBond, secondBond,
 				liborVolatility, notional, false, strikeOfTheCaplet);
+
+		final double initialForwardLibor = caplet.getInitialValueLibor();
 
 		final double priceOfTheCaplet = caplet.getValueInClassicUnits(initialForwardLibor);
 
