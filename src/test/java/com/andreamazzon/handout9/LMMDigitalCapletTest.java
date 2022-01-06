@@ -33,7 +33,6 @@ public class LMMDigitalCapletTest {
 		final int numberOfPaths = 100000;// the number of simulated processes
 
 		final double simulationTimeStep = 0.1;// for the SIMULATION discretization
-
 		// of course the two time discretizations are not required to be the same!
 		final double liborPeriodLength = 0.5;// for the TENURE STRUCTURE discretization
 		final double liborRateTimeHorizon = 10;
@@ -50,9 +49,10 @@ public class LMMDigitalCapletTest {
 		// simple :) )
 		final double[] forwardsForCurve = { 0.05, 0.05, 0.05, 0.05, 0.05 };
 
-		// construct such an object using the method
-		// LIBORMarketModelConstruction.createLIBORMarketModel
-		final LIBORModelMonteCarloSimulationModel myLiborMonteCarlo = null;
+		// we construct the simulation
+		final LIBORModelMonteCarloSimulationModel myLiborMonteCarlo = LIBORMarketModelConstruction
+				.createLIBORMarketModel(numberOfPaths, simulationTimeStep, liborPeriodLength, liborRateTimeHorizon,
+						fixingForForwards, forwardsForCurve, correlationDecayParam, a, b, c, d);
 
 		// parameters for the digital caplet
 		final double strike = 0.05;
@@ -62,30 +62,36 @@ public class LMMDigitalCapletTest {
 		final double tolerance = 1E-1;
 
 		/*
-		 * In order to get the analytical prices, we need the volatilities sigma_i(t_j),
-		 * for any index i moving in the time discretization of the tenure structure and
-		 * any t_j moving in the time discretization of the simulation. In order to do
+		 * In order to get the analytical prices, we need the volatilities sigma_j(t_i),
+		 * for any index j moving in the time discretization of the tenure structure and
+		 * any t_i moving in the time discretization of the simulation. In order to do
 		 * this, we can use the method getIntegratedLIBORCovariance() of
 		 * LIBORMarketModel. It returns a three-dimensional matrix: its (i,j,k) element
 		 * is the integrated covariance of the Libors L(T_j,T_{j+1}) and L(T_k,T_{k+1}),
-		 * evaluated at time t_i. We have to give it the time discretization for the
-		 * simulated processes.
+		 * up at time t_i (that is, the integral is up to time t_i). We have to give it
+		 * the time discretization for the simulated processes.
 		 */
 		final TimeDiscretization simulationTimeDiscretization = new TimeDiscretizationFromArray(0.0,
 				(int) (liborRateTimeHorizon / simulationTimeStep), simulationTimeStep);
 
 		final TermStructureModel liborModel = myLiborMonteCarlo.getModel();
-		// getIntegratedLIBORCovariance() is defined in LIBORMarketModel: we need to
-		// downcast
+		/*
+		 * getIntegratedLIBORCovariance() is defined in LIBORMarketModel: we need to
+		 * downcast
+		 */
 		final double[][][] integratedVarianceMatrix = ((LIBORMarketModel) liborModel)
 				.getIntegratedLIBORCovariance(simulationTimeDiscretization);
 
-		// extract the discount curve (i.e., the zero coupon bonds curve) in order to
-		// get the analytical price
+		/*
+		 * extract the discount curve (i.e., the zero coupon bonds curve) in order to
+		 * get the analytical price
+		 */
 		final DiscountCurve discountFactors = liborModel.getDiscountCurve();
 
-		// extract the forward curve (i.e., the Libor curve) in order to get the
-		// analytical price
+		/*
+		 * extract the forward curve (i.e., the Libor curve) in order to get the
+		 * analytical price
+		 */
 		final ForwardCurve forwards = liborModel.getForwardRateCurve();
 
 		System.out.println("Digital caplet prices:\n");
@@ -94,26 +100,26 @@ public class LMMDigitalCapletTest {
 
 		for (int maturityIndex = 1; maturityIndex <= myLiborMonteCarlo.getNumberOfLibors() - 1; maturityIndex++) {
 
-			/*
-			 * GET EVERY MATURITY TIME T_i AND PAYMENT DATE T_{i+1} FROM myLiborMonteCarlo
-			 * (LOOK AT THE METHODS OF THE FINAMTH LIBRARY YOU CAN USE)
-			 */
-			final double optionMaturity = 0;
+			final double optionMaturity = myLiborMonteCarlo.getLiborPeriod(maturityIndex);// T_i
 			System.out.print(formatterDouble.format(optionMaturity) + "          ");
 
-			final double optionPaymentDate = 0;// T_{i+1}
+			final double optionPaymentDate = myLiborMonteCarlo.getLiborPeriod(maturityIndex + 1);// T_{i+1}
 
-			// COMPUTE THE VALUE OF THE DIGITAL CAPLET FOR EVERY MATURITY TIME T_i.
+			// Computation of the Monte Carlo value
+			final MyDigitalCaplet digitalCaplet = new MyDigitalCaplet(optionMaturity, optionPaymentDate, strike);
 
-			final double valueSimulation = 0;
+			final double valueSimulation = notional * digitalCaplet.getValue(myLiborMonteCarlo);
 
 			System.out.print(formatterDouble.format(valueSimulation) + "          ");
 
-			// computation of the analytical value. We have to specify quite some things,
-			// see the next lines
+			/*
+			 * computation of the analytical value. We have to specify quite some things,
+			 * see lines 130-132
+			 */
 			final double periodLength = optionPaymentDate - optionMaturity;
 
-			// First we get of the volatility sigma_i(t_j). Here i=liborIndex, j=t_j = T_i.
+			// first we get of the volatility sigma_i(t_j). Here i = liborIndex, j =
+			// t_j = T_i.
 
 			/*
 			 * we need the index for the maturity also in the time discretization for the

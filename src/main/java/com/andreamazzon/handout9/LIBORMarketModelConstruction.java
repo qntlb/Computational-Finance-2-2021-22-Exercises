@@ -1,15 +1,10 @@
 package com.andreamazzon.handout9;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import net.finmath.exception.CalculationException;
 import net.finmath.marketdata.model.curves.ForwardCurve;
 import net.finmath.marketdata.model.curves.ForwardCurveInterpolation;
 import net.finmath.montecarlo.BrownianMotion;
 import net.finmath.montecarlo.BrownianMotionFromMersenneRandomNumbers;
-import net.finmath.montecarlo.IndependentIncrements;
-import net.finmath.montecarlo.interestrate.LIBORMarketModel;
 import net.finmath.montecarlo.interestrate.LIBORModelMonteCarloSimulationModel;
 import net.finmath.montecarlo.interestrate.LIBORMonteCarloSimulationFromLIBORModel;
 import net.finmath.montecarlo.interestrate.models.LIBORMarketModelStandard;
@@ -37,8 +32,8 @@ public class LIBORMarketModelConstruction {
 	/**
 	 * It specifies and creates a Rebonato volatility structure, represented by a
 	 * matrix, for the LIBOR Market Model. In particular, we have
-	 * dL_i(t_j)=\sigma_i(t_j)L_i(t_j)dW_i(t_j) with
-	 * \sigma_i(t_j)=(a+b(T_i-t_j))\exp(-c(T_i-t_j))+d, for t_j < T_i, for four
+	 * dL_j(t_i)=\sigma_j(t_i)L_j(t_i)dW_j(t_i) with
+	 * \sigma_j(t_i)=(a+b(T_j-t_i))\exp(-c(T_j-t_i))+d, for t_i < T_j, for four
 	 * parameters a,b,c,d with b,c>0. This class creates the matrix
 	 * volatility[i,j]=sigma_j(t_i)
 	 *
@@ -61,14 +56,14 @@ public class LIBORMarketModelConstruction {
 
 		for (int timeIndex = 0; timeIndex < numberOfSimulationTimes; timeIndex++) {
 			for (int LIBORIndex = 0; LIBORIndex < numberOfTenureStructureTimes; LIBORIndex++) {
-				final double currentTime = simulationTimeDiscretization.getTime(timeIndex);// t_j
-				final double currentMaturity = tenureStructureDiscretization.getTime(LIBORIndex);// T_i
-				final double timeToMaturity = currentMaturity - currentTime;
+				final double currentTime = simulationTimeDiscretization.getTime(timeIndex);// t_i
+				final double currentMaturity = tenureStructureDiscretization.getTime(LIBORIndex);// T_j
+				final double timeToMaturity = currentMaturity - currentTime; // T_j-t_i
 				double instVolatility;
 				if (timeToMaturity <= 0) {
 					instVolatility = 0; // This forward rate is already fixed, no volatility
 				} else {
-					instVolatility = d + (a + b * timeToMaturity) * Math.exp(-c * timeToMaturity);// \sigma_i(t)=(a+b(T_i-t))\exp(-c(T_i-t))+d
+					instVolatility = d + (a + b * timeToMaturity) * Math.exp(-c * timeToMaturity);// \sigma_j(t)=(a+b(T_j-t))\exp(-c(T_j-t))+d
 				}
 				// Store
 				volatility[timeIndex][LIBORIndex] = instVolatility;
@@ -146,8 +141,8 @@ public class LIBORMarketModelConstruction {
 
 		/*
 		 * Step 3 Create the forward curve (initial values for the LIBOR market model).
-		 * It might fail to have all the forwards: the others are interpolated using the
-		 * specific method of the Finmath library
+		 * We might fail to have (or do not want to give) all the forwards: the others
+		 * are interpolated using the specific method of the Finmath library
 		 */
 		final ForwardCurve forwardCurve = ForwardCurveInterpolation.createForwardCurveFromForwards("forwardCurve",
 				fixingForGivenForwards, // fixing dates of the forwards we provide
@@ -194,83 +189,4 @@ public class LIBORMarketModelConstruction {
 
 	}
 
-	/**
-	 * It returns a simulation of a LIBOR Market model which is the same of the
-	 * simulation given as argument (i.e., also same realizations of the Brownian
-	 * motions) with a different decay parameter.
-	 *
-	 * @param oldModel,    the simulation of the model whose LIBORCorrelationModel
-	 *                     we want to change
-	 * @param correlation, the value of the decay parameter of the new
-	 *                     LIBORCorrelationModel: this LIBORCorrelationModel will be
-	 *                     indeed of type LIBORCorrelationModelExponentialDecay.
-	 * @return the simulation of the model with the new LIBORCorrelationModel
-	 * @throws CalculationException
-	 */
-	public static LIBORModelMonteCarloSimulationModel getCloneWithModifiedCorrelation(
-			LIBORModelMonteCarloSimulationModel oldLIBORSimulation, double decayParameter) throws CalculationException {
-		/*
-		 * Steps: - check if the model (i.e. the TermStructureModel object) we get from
-		 * the simulation (i.e., from LIBORModelMonteCarloSimulationModel) is of type
-		 * LIBORMarketModel; - get this model as LIBORMarketModel (downcasting) - get
-		 * the LIBORCovarianceModel object from the LIBORMarketModel object (that's why
-		 * we want it to be LIBORMarketModel) - create a new LIBORCorrelationModel as a
-		 * LIBORCorrelationModelExponentialDecay object with the given correlation decay
-		 * parameter, and the other arguments taken from the LIBORCovarianceModel object
-		 * - create a new LIBORCovarianceModel with the new LIBORCorrelationModel -
-		 * create a new LIBORMarketModel with the new LIBORCovarianceModel - link the
-		 * LIBORMarketModel with the BrownianMotion of the old simulation to get a
-		 * MonteCarloProcess with the constructor of EulerSchemeFromProcessModel - pass
-		 * this MonteCarloProcess to the constructor of
-		 * LIBORMonteCarloSimulationFromLIBORModel to get a
-		 * LIBORModelMonteCarloSimulationModel.
-		 */
-
-		/*
-		 * we check if oldLIBORSimulation.getModel() is of type LIBORMarketModel. If
-		 * not, we know that we will get a class Exception few lines below. At least, if
-		 * this is the case, here we print something in order to help the user
-		 * understanding what's going wrong.
-		 */
-		if (!(oldLIBORSimulation.getModel() instanceof LIBORMarketModel)) {
-			System.out.println("The model returned by oldLIBORSimulation must be of type LIBORMarketModel!");
-		}
-		/*
-		 * we downcast: we want the model to be of type LIBORMarketModel, because then
-		 * we want it to be able to call the method getCovarianceModel()
-		 */
-		final LIBORMarketModel model = (LIBORMarketModel) oldLIBORSimulation.getModel();
-
-		// covariance model: it is returned as an object of type LIBORCovarianceModel
-		// (the interface).
-		final LIBORCovarianceModel oldCovarianceModel = model.getCovarianceModel();
-
-		/*
-		 * new correlation model: constructor with the same fields of the old
-		 * LIBORCovarianceModel, except for the decay parameter
-		 */
-		final LIBORCorrelationModel newCorrelationModel = new LIBORCorrelationModelExponentialDecay(
-				oldCovarianceModel.getTimeDiscretization(), oldCovarianceModel.getLiborPeriodDiscretization(),
-				oldCovarianceModel.getNumberOfFactors(), decayParameter);
-
-		final Map<String, Object> changeMap = new HashMap<String, Object>();
-		// name of the field and new value
-		changeMap.put("correlationModel", newCorrelationModel);
-		// new covariance model
-		final LIBORCovarianceModel newCovarianceModel = oldCovarianceModel.getCloneWithModifiedData(changeMap);
-
-		// new LIBOR model
-		final ProcessModel newLiborMarketModel = model.getCloneWithModifiedCovarianceModel(newCovarianceModel);
-
-		final IndependentIncrements brownianMotion = oldLIBORSimulation.getBrownianMotion();
-
-		final MonteCarloProcess newMonteCarloProcess = new EulerSchemeFromProcessModel(newLiborMarketModel,
-				brownianMotion);
-		/*
-		 * new simulation: the model is linked with a clone of the Euler Scheme of the
-		 * old simulation. Note: this is a clone and not the same object, since this
-		 * would give a running time error.
-		 */
-		return new LIBORMonteCarloSimulationFromLIBORModel(newMonteCarloProcess);
-	}
 }
