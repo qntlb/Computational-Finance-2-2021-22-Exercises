@@ -5,8 +5,8 @@ import net.finmath.marketdata.model.curves.ForwardCurve;
 import net.finmath.marketdata.model.curves.ForwardCurveInterpolation;
 import net.finmath.montecarlo.BrownianMotion;
 import net.finmath.montecarlo.BrownianMotionFromMersenneRandomNumbers;
-import net.finmath.montecarlo.interestrate.LIBORModelMonteCarloSimulationModel;
 import net.finmath.montecarlo.interestrate.LIBORMonteCarloSimulationFromLIBORModel;
+import net.finmath.montecarlo.interestrate.TermStructureMonteCarloSimulationModel;
 import net.finmath.montecarlo.interestrate.models.LIBORMarketModelStandard;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORCorrelationModel;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORCorrelationModelExponentialDecay;
@@ -104,7 +104,7 @@ public class LIBORMarketModelConstruction {
 	 *         representing the simulation of a LMM
 	 * @throws CalculationException
 	 */
-	public static LIBORModelMonteCarloSimulationModel createLIBORMarketModel(int numberOfPaths,
+	public static TermStructureMonteCarloSimulationModel createLIBORMarketModel(int numberOfPaths,
 			double simulationTimeStep, double LIBORPeriodLength, // T_i-T_{i-1}, we suppose it to be fixed
 			double LIBORRateTimeHorizon, // T_n
 			double[] fixingForGivenForwards, double[] givenForwards, double correlationDecayParam, double a, double b,
@@ -183,8 +183,10 @@ public class LIBORMarketModelConstruction {
 
 		final MonteCarloProcess process = new EulerSchemeFromProcessModel(LIBORMarketModel, brownianMotion);
 
-		// Step 9: give the Euler scheme to the constructor of
-		// LIBORMonteCarloSimulationFromLIBORModel
+		/*
+		 * Step 9: give the Euler scheme to the constructor of
+		 * LIBORMonteCarloSimulationFromLIBORModel
+		 */
 		return new LIBORMonteCarloSimulationFromLIBORModel(process);
 
 	}

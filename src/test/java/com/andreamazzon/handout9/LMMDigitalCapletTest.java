@@ -50,7 +50,7 @@ public class LMMDigitalCapletTest {
 		final double[] forwardsForCurve = { 0.05, 0.05, 0.05, 0.05, 0.05 };
 
 		// we construct the simulation
-		final LIBORModelMonteCarloSimulationModel myLiborMonteCarlo = LIBORMarketModelConstruction
+		final LIBORModelMonteCarloSimulationModel myLiborMonteCarlo = (LIBORModelMonteCarloSimulationModel) LIBORMarketModelConstruction
 				.createLIBORMarketModel(numberOfPaths, simulationTimeStep, liborPeriodLength, liborRateTimeHorizon,
 						fixingForForwards, forwardsForCurve, correlationDecayParam, a, b, c, d);
 
@@ -59,7 +59,7 @@ public class LMMDigitalCapletTest {
 		final double notional = 10000;
 
 		// parameter for the comparison between Monte Carlo and analytical price
-		final double tolerance = 1E-1;
+		final double tolerance = 2E-2;
 
 		/*
 		 * In order to get the analytical prices, we need the volatilities sigma_j(t_i),
@@ -127,7 +127,7 @@ public class LMMDigitalCapletTest {
 			 * integrated covariance.
 			 */
 			final int maturityIndexInTheSimulationDiscretization = myLiborMonteCarlo.getTimeIndex(optionMaturity);
-
+			// get i such that t_i = maturity
 			final double integratedVariance = integratedVarianceMatrix[maturityIndexInTheSimulationDiscretization][maturityIndex][maturityIndex];
 			final double variance = integratedVariance / optionMaturity;
 			final double standardDeviation = Math.sqrt(variance);

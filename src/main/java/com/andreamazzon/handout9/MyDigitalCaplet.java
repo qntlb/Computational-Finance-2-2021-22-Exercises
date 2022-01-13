@@ -27,7 +27,7 @@ public class MyDigitalCaplet extends AbstractLIBORMonteCarloProduct {
 
 	/**
 	 * Computes and returns the payoff of
-	 * 
+	 *
 	 * @param evaluationTime The time on which this products value is evaluated.
 	 * @param model          The underlying of the product. A priori is an object of
 	 *                       type TermStructureMonteCarloSimulationModel. In our
@@ -40,7 +40,7 @@ public class MyDigitalCaplet extends AbstractLIBORMonteCarloProduct {
 	public RandomVariable getValue(double evaluationTime, TermStructureMonteCarloSimulationModel model)
 			throws CalculationException {
 
-		// (T_{i+1)-T_i)1_(L(T_i,T_{i+1};T_i)-K)
+		// (T_{i+1)-T_i)1_(L(T_i,T_{i+1};T_i)-K>0)
 		final double periodLength = periodEnd - periodStart;
 
 		// Get the value of the LIBOR L_i at T_i: L(T_i,T_{i+1};T_i)
