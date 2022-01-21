@@ -16,7 +16,9 @@ import net.finmath.montecarlo.interestrate.CalibrationProduct;
 import net.finmath.montecarlo.interestrate.LIBORMonteCarloSimulationFromLIBORModel;
 import net.finmath.montecarlo.interestrate.TermStructureMonteCarloSimulationModel;
 import net.finmath.montecarlo.interestrate.models.LIBORMarketModelFromCovarianceModel;
+import net.finmath.montecarlo.interestrate.models.covariance.AbstractLIBORCovarianceModel;
 import net.finmath.montecarlo.interestrate.models.covariance.AbstractLIBORCovarianceModelParametric;
+import net.finmath.montecarlo.interestrate.models.covariance.BlendedLocalVolatilityModel;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORCorrelationModel;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORCorrelationModelExponentialDecay;
 import net.finmath.montecarlo.interestrate.models.covariance.LIBORCovarianceModelFromVolatilityAndCorrelation;
@@ -67,6 +69,7 @@ public class LIBORMarketModelConstructionWithDynamicsAndMeasureSpecification {
 	private static double[][] createVolatilityStructure(double a, double b, double c, double d,
 			TimeDiscretization simulationTimeDiscretization, TimeDiscretization tenureStructureDiscretization) {
 		// volatility[i,j]=sigma_j(t_i)
+		//final double scalingFactor = (dynamicsType==Dynamics.LOGNORMAL) ? 1.0: 0.05;
 		final int numberOfSimulationTimes = simulationTimeDiscretization.getNumberOfTimeSteps();
 		final int numberOfTenureStructureTimes = tenureStructureDiscretization.getNumberOfTimeSteps();
 		final double[][] volatility = new double[numberOfSimulationTimes][numberOfTenureStructureTimes];
@@ -81,6 +84,7 @@ public class LIBORMarketModelConstructionWithDynamicsAndMeasureSpecification {
 					instVolatility = 0; // This forward rate is already fixed, no volatility
 				} else {
 					instVolatility = d + (a + b * timeToMaturity) * Math.exp(-c * timeToMaturity);// \sigma_i(t)=(a+b(T_i-t))\exp(-c(T_i-t))+d
+					//instVolatility *= scalingFactor;
 				}
 				// Store
 				volatility[timeIndex][LIBORIndex] = instVolatility;
@@ -206,10 +210,12 @@ public class LIBORMarketModelConstructionWithDynamicsAndMeasureSpecification {
 		 * this case, the volatility gets rescaled multiplying it by the initial value
 		 * of our processes).
 		 */
-		//final double parameterForBlended = (dynamicsType == Dynamics.LOGNORMAL) ? 0.0 : 1.0;
+		final double parameterForBlended = (dynamicsType == Dynamics.LOGNORMAL) ? 0.0 : 1.0;
 
-		//final AbstractLIBORCovarianceModel covarianceModelBlended = new BlendedLocalVolatilityModel(covarianceModel,
-		//		forwardCurve, parameterForBlended, false);
+		//diffusion of the process is (L_0 a + L (1-a)) \sigma_i(t) (sum of lambdas)
+		//if log-normal L \sigma_i(t) (sum of lambdas)
+		final AbstractLIBORCovarianceModel covarianceModelBlended = new BlendedLocalVolatilityModel(covarianceModel,
+				forwardCurve, parameterForBlended, false);
 
 		// Step 8: we now create the model (i.e., the object of type LiborMarketModel)
 		// Set model properties
@@ -221,9 +227,20 @@ public class LIBORMarketModelConstructionWithDynamicsAndMeasureSpecification {
 		// Choose the simulation measure
 		properties.put("measure", nameOfTheMeasure);
 
+		/*
+		 * Here we have to be careful: the fact that the STATE SPACE is "normal" means
+		 * that you do not apply the exponential state-space transformation that you
+		 * apply instead when you simulate log-normal processes, NOT that the dynamics
+		 * of the process themselves are meant to be normal. Now, since in
+		 * BlendedLocalVolatilityModel we simulate the model as (a L0 + (1-a)L) F, if a=0
+		 * (as it is the case for the log-normal DYNAMICS) and if F is specified by
+		 * log-normal STATE SPACE, we would "multiply twice by L", and simulate
+		 * something like dL_t = sigma_L L_t^2 dW_t. So, we have always to specify the
+		 * STATE SPACE to be NORMAL when we use BlendedLocalVolatilityModel.
+		 */
+		//final String nameOfTheStateSpaceTransform = (dynamicsType == Dynamics.LOGNORMAL) ? "lognormal" : "normal";
 
-		final String nameOfTheStateSpaceTransform = (dynamicsType == Dynamics.LOGNORMAL) ? "lognormal" : "normal";
-
+		final String nameOfTheStateSpaceTransform ="normal";
 		// Choose the state space transform
 		properties.put("stateSpace", nameOfTheStateSpaceTransform);
 
@@ -240,7 +257,7 @@ public class LIBORMarketModelConstructionWithDynamicsAndMeasureSpecification {
 		 * can specify some properties
 		 */
 		final ProcessModel LIBORMarketModel = new LIBORMarketModelFromCovarianceModel(LIBORPeriodDiscretization,
-				null /* analyticModel */, forwardCurve, discountCurve, randomVariableFactory, covarianceModel,
+				null /* analyticModel */, forwardCurve, discountCurve, randomVariableFactory, covarianceModelBlended,
 				calibrationItems, properties);
 
 		// Step 9: create an Euler scheme of the LIBOR model defined above
