@@ -42,13 +42,20 @@ public class FactorReductionExponentialDecay {
 	 * @return the correlation matrix
 	 */
 	public double[][] getOriginalCorrelationMatrix(double corrDecay) {
-		corrDecay = Math.max(corrDecay, 0); // Negative values of a do not make sense.
+		corrDecay = Math.max(corrDecay, 0); // Negative values of corrDecay do not make sense.
 
 		final double[][] correlationMatrix = new double[numberOfTimeSteps][numberOfTimeSteps];
 		// Construction of the n factors correlation matrix: use a double for loop
-		//THE CODE THAT OU HAVE TO WRITE HAVE TO WRITE STARTS HERE
-
-		//AND ENDS HERE
+		for(int row=0; row<correlationMatrix.length; row++) {
+			for(int col=0; col<row; col++) {
+				// Exponentially decreasing instantaneous correlation
+				correlationMatrix[row][col] = Math.exp(
+						-corrDecay * (liborPeriodDiscretization.getTime(row)
+								- liborPeriodDiscretization.getTime(col)));
+				correlationMatrix[col][row] = correlationMatrix[row][col];
+			}
+			correlationMatrix[row][row] = 1;
+		}
 		return correlationMatrix;
 	}
 
@@ -75,17 +82,23 @@ public class FactorReductionExponentialDecay {
 	 */
 	public double[][] getReducedCorrelationMatrix(double corrDecay, int numberOfFactors) {
 
-		final double[][] reducedCorrelationMatrix = new double[numberOfTimeSteps]
-				[numberOfTimeSteps];
-		/*
-		 *  Perform a factor decomposition
-		 *  (and reduction if numberOfFactors < correlationMatrix.columns())
-		 */
-		final double[][] factorMatrix = getFactorMatrix(corrDecay, numberOfFactors);
-		//construct here the new correlation matrix basing on the factor matrix. Use again a double for loop
-		//THE CODE THAT YOU HAVE TO WRITE STARTS HERE..
+		final double[][] reducedCorrelationMatrix = new double[numberOfTimeSteps][numberOfTimeSteps];
 
-		//..AND ENDS HERE
+		// factor decomposition (and reduction if numberOfFactors < correlationMatrix.columns()): we get F^r
+		final double[][] factorMatrix = getFactorMatrix(corrDecay, numberOfFactors);
+
+		//we construct here the new correlation matrix basing on the factor matrix. Use again a double for loop
+		for(int component1=0; component1<numberOfTimeSteps; component1++) {
+			for(int component2=0; component2<component1; component2++) {
+				double correlation = 0.0;
+				for(int factor=0; factor<numberOfFactors; factor++) {
+					correlation += factorMatrix[component1][factor] * factorMatrix[component2][factor];
+				}
+				reducedCorrelationMatrix[component1][component2] = correlation;
+				reducedCorrelationMatrix[component2][component1] = correlation;
+			}
+			reducedCorrelationMatrix[component1][component1] = 1.0;
+		}
 		return reducedCorrelationMatrix;
 	}
 
@@ -93,14 +106,25 @@ public class FactorReductionExponentialDecay {
 	/**
 	 * Compare and returns the average absolute difference between elements of the original matrix with respect to the
 	 * one obtained by performing factor reduction. That is, it returns
-	 * 1/n^2\sum_{i,j=1}^n |A_{i,j}-ReducedA_{i,j}|,
+	 * 2/(n(n-1))\sum_{i,j=1}^n |A_{i,j}-ReducedA_{i,j}|,
 	 * where A is the original matrix and ReducedA the one after factor reduction.
 	 * @param corrDecay
 	 * @param numberOfFactors
 	 * @return
 	 */
 	public double getErrorFromFactorReduction (double corrDecay, int numberOfFactors) {
-		//complete this method!
-		return 0;
+		final double[][] originalCorrelationMatrix = getOriginalCorrelationMatrix(corrDecay);
+		final double[][] reducedCorrelationMatrix = getReducedCorrelationMatrix(corrDecay, numberOfFactors);
+		double diffCorrelation = 0.0;
+		for(int component1=0; component1<numberOfTimeSteps; component1++) {
+			for(int component2=0; component2<component1; component2++) {
+				diffCorrelation +=
+						Math.abs(originalCorrelationMatrix[component1][component2]
+								- reducedCorrelationMatrix[component1][component2]);
+			}
+		}
+		//the number of comparisons we do is N(N-1)/2, when N = number of time steps
+		final double averageDiffCorrelation = 2*diffCorrelation/(numberOfTimeSteps*(numberOfTimeSteps-1));
+		return averageDiffCorrelation;
 	}
 }
